@@ -16,7 +16,7 @@ class HelpCog(commands.Cog):
             if new_line:
                 content += '\n'
             if pages:
-                if len(pages[-1].description) <= 250:
+                if len(pages[-1].description) <= 200:
                     pages[-1].description += content
                 else:
                     new_embed = discord.Embed(description=content,color=discord.Color.blue())
