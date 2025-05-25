@@ -63,7 +63,7 @@ class HelpCog(commands.Cog):
                 await ctx.response.send_message(f'No page found with number {str(page)}')
             else:
                 nmessage += f'\n\n------------------------ PAGE {str(page)}/{len(pages)} ------------------------\n'
-                await ctx.response.send_message(nmessage, embed=pages[page-1])
+                await ctx.response.send_message(nmessage, embed=pages[page-1], ephemeral=True)
         else:
             cmd = ctx.client.tree.get_command(command)
             if cmd:

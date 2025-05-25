@@ -123,11 +123,11 @@ class GTN(commands.Cog):
             await ctx.response.send_message("Range start and end cannot be less than 100!",ephemeral=True)
             return
         if range_end - range_start != 100:
-            self.extra = (range_end-range_start)/10
+            self.extra = ((range_end-range_start)-(range_end-range_start))/10
         else:
             self.extra = 0
         if ctx.channel.id != get_package_config("gtn")["channel_id"]:
-            await ctx.response.send_message("This command can only be used in the GTN channel! GTN May not have been setup on this server!")
+            await ctx.response.send_message(f"This command can only be used in <#{get_package_config('gtn')['channel_id']}>! GTN May not have been setup on this server!")
             return
         if self.number == None:
             await ctx.response.send_message("Starting Guess the Number!")
