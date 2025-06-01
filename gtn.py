@@ -12,20 +12,24 @@ number = random.randint(0, 100)
 def get_points(user_id):
     if not exists_json_db("gtn"):
         create_json_db("gtn")
-    return get_json_db("gtn").get(str(user_id), 0)
+    return get_json_db("gtn").get(str(user_id), [0,0])[0]
+def get_wins(user_id):
+    if not exists_json_db("gtn"):
+        create_json_db("gtn")
+    return get_json_db("gtn").get(str(user_id), [0,0])[1]
 
-def change_points(user_id, points):
+def change_points(user_id, points, win=1):
     if not exists_json_db("gtn"):
         create_json_db("gtn")
     data = get_json_db("gtn")
-    data[str(user_id)] = points
+    data[str(user_id)] = [points, get_wins(user_id)+win]
     change_json_db("gtn", data)
 
 def get_leaderboard():
     if not exists_json_db("gtn"):
         create_json_db("gtn")
     data = get_json_db("gtn")
-    return sorted(data.items(), key=lambda x: x[1], reverse=True)
+    return sorted(data.items(), key=lambda x: x[1][0], reverse=True)
 
 create_package_config("gtn", {"channel_id": None})
 
@@ -149,7 +153,10 @@ class GTN(commands.Cog):
         if user == None:
             await ctx.response.send_message(f"You have {get_points(ctx.user.id)} points",ephemeral=True)
         else:
-            await ctx.response.send_message(f"{user.mention} has {get_points(user.id)} points",view=ChangePointsView(user.id, get_points(user.id)),ephemeral=True)
+            if ctx.channel.permissions_for(user).administrator:
+                await ctx.response.send_message(f"{user.mention} has {get_points(user.id)} points",view=ChangePointsView(user.id, get_points(user.id)),ephemeral=True)
+            else:
+                await ctx.response.send_message(f"{user.mention} has {get_points(user.id)} points",ephemeral=True)
 
     @group.command(name="stop", description="Stop the GTN game")
     async def stop_callback(self, ctx: discord.Interaction):
@@ -165,7 +172,7 @@ class GTN(commands.Cog):
         embed = discord.Embed(title="Guess the Number Leaderboard", description="Top 10 players")
         for i in range(10):
             if i < len(leaderboard):
-                embed.add_field(name=f"{i+1}. {leaderboard[i][1]} Points", value=f"<@{leaderboard[i][0]}>", inline=False)
+                embed.add_field(name=f"{i+1}. {leaderboard[i][1][0]} Points", value=f"<@{leaderboard[i][0]}>", inline=False)
         await ctx.response.send_message(embed=embed,ephemeral=True)
 
     @group.command(name="set_channel", description="Set the channel for the GTN game")

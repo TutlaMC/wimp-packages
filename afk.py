@@ -2,7 +2,7 @@
 
 from discord import app_commands
 from discord.ext import commands
-import discord
+import discord, datetime
 
 afks = {}
 def is_safe(message):
@@ -23,7 +23,7 @@ class AFKCog(commands.Cog):
         if message == "":
             await ctx.response.send_message(f"You are now AFK!",delete_after=4)
         else:
-            await ctx.response.send_message(f"You are now AFK: {message}",delete_after=4)
+            await ctx.response.send_message(f"You are now AFK: {message} - <t:{datetime.datetime.now().timestamp()}>",delete_after=4)
             afks[ctx.user.id] = message
         if ctx.user.id in afks:
             afks.pop(ctx.user.id)
@@ -44,10 +44,10 @@ class AFKCog(commands.Cog):
             return
         if message.author.id in afks:
             afks.pop(message.author.id)
-            await message.channel.send(f"{message.author.mention} is no longer AFK!")
+            await message.channel.send(f"{message.author.mention} is no longer AFK!",delete_after=4)
         for i in message.mentions:
             if i.id in afks:
-                await message.channel.send(f"{i.mention} is AFK {'for' + str(afks[i.id]) if afks[i.id].replace('','') != '' else ''}!",delete_after=4,silent=True)
+                await message.channel.send(f"{i.mention} is AFK {'for' + str(afks[i.id]) if afks[i.id].replace('','') != '' else ''} - <t:{datetime.datetime.now().timestamp()}>",delete_after=4,silent=True)
 
         if message.content.startswith("!afk"):
             if not is_safe(message.content[4:]):
