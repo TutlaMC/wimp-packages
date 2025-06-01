@@ -76,7 +76,7 @@ class AITraining(commands.Cog):
         if hasattr(message.author, "top_role"):
             top_role = message.author.top_role.name
         else:
-            top_role = "None"
+            return
         message_data = {
                 'content': message.content,
                 'author': str(message.author.display_name),
