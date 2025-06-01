@@ -4,7 +4,7 @@ from cog_core import *
 from discord.ext import commands
 import discord, random
 import discord.app_commands
-from datetime import datetime   
+from datetime import datetime, timedelta, timezone
 
 def get_wins(user_id):
     if not exists_json_db("gtn"):
@@ -19,25 +19,29 @@ class Tyler(commands.Cog):
 
 
     @app_commands.command(name="request", description="Request a role")
-    @app_commands.choices(rn=[
-    app_commands.Choice(name="RNG Manipulator", value="rng"),
-    app_commands.Choice(name="Legacy Roles", value="legacy"),
-    app_commands.Choice(name="Loyal Member", value="loyal"),
-    ])
-    async def request_cmd(self, ctx: discord.Interaction, rn=app_commands.Choice(str)):
-        if rn == "rng":
+    @app_commands.describe(rn="The role you are requesting")
+    @app_commands.choices(
+        rn=[
+            discord.app_commands.Choice(name="RNG Manipulator", value="rng"),
+            discord.app_commands.Choice(name="Legacy Roles", value="legacy"),
+            discord.app_commands.Choice(name="Loyal Member", value="loyal")
+        ]
+    )
+    async def request_cmd(self, ctx: discord.Interaction, rn: discord.app_commands.Choice[str]):
+        value = rn.value
+        if value == "rng":
             if get_wins(ctx.user.id) < 10:
-                await ctx.response.send_message(f"You do not have enough *guess the number* wins for this role! You need {10-get_wins(ctx.user.id)} more wins!",ephemeral=True)
+                await ctx.response.send_message(f"You do not have enough *guess the number* wins for this role! You need {10 - get_wins(ctx.user.id)} more wins!", ephemeral=True)
             else:
                 role = await ctx.guild.fetch_role(1360666084599926824)
                 await ctx.user.add_roles(role)
                 await ctx.response.send_message("You got the RNG Manipulator role!")
-        elif rn == "legacy":
+        elif value == "legacy":
             await ctx.response.send_message("Use my cool bot for this. This bot does not track messages")
-        elif rn == "loyal":
-            s = datetime.now() - datetime.timedelta(days=182)
+        elif value == "loyal":
+            s = datetime.now(timezone.utc) - timedelta(days=182)
             if ctx.user.joined_at < s:
-                await ctx.response.send_message(f"You have to be in the server for more than 6 months! Days remaining: {ctx.user.joined_at-s}")
+                await ctx.response.send_message(f"You have to be in the server for more than 6 months! Days remaining: {ctx.user.joined_at - s}")
             else:
                 r = await ctx.guild.fetch_role(1360665667078062144)
                 await ctx.user.add_roles(r)
@@ -45,13 +49,31 @@ class Tyler(commands.Cog):
         else:
             await ctx.response.send_message("This error is not possible, report it")
         
-    @app_commands.command("rule",description="checkout a rule!")
-    async def rulecmd(self, ctx:discord.Interaction, number:app_commands.Range[int, 1, 15]):
+    @app_commands.command(name="rule",description="checkout a rule!")
+    @app_commands.describe(rule="The rule you want to check out")
+    @app_commands.choices(rule=[
+    app_commands.Choice(name="1. No NSFW Content 🚫", value=1),
+    app_commands.Choice(name="2. No Toxicity to Members 💬", value=2),
+    app_commands.Choice(name="3. No Doxxing 📵", value=3),
+    app_commands.Choice(name="4. No Discrimination of Any Sort 🚫", value=4),
+    app_commands.Choice(name="5. Respect The Higher-Ups 🙇", value=5),
+    app_commands.Choice(name="6. Use Channels Correctly ✅", value=6),
+    app_commands.Choice(name="7. Keep the Server PG-13 🙏", value=7),
+    app_commands.Choice(name="8. No Advertising in DMs ❌", value=8),
+    app_commands.Choice(name="9. English Only 🤟", value=9),
+    app_commands.Choice(name="10. No Controversial/Political Topics ❌", value=10),
+    app_commands.Choice(name="11. No Hate Speech 🗣️", value=11),
+    app_commands.Choice(name="12. Have Common Sense 🧠", value=12),
+    app_commands.Choice(name="13. No Impersonation ❌", value=13),
+    app_commands.Choice(name="14. Follow Discord’s TOS 📜", value=14),
+    app_commands.Choice(name="15. Have Fun! 🎉", value=15)
+])
+    async def rulecmd(self, ctx:discord.Interaction, rule:app_commands.Choice[int]):
         if ctx.channel.permissions_for(ctx.user).manage_messages:
             eph = False
         else:
             eph = True
-        
+        number = rule.value
         if number == 1:
             name = "No NSFW Content 🔞"
             rule = """
@@ -203,3 +225,4 @@ Enjoy your time here and make the most out of our community.
 
 async def setup(bot):
     await bot.add_cog(Tyler(bot))
+    await bot.tree.sync()

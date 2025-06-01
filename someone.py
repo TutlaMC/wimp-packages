@@ -1,5 +1,6 @@
 # Wimp package for fake messages, \w rate limits!
 
+
 from discord import app_commands
 from discord.ext import commands
 import discord, datetime, random
@@ -30,14 +31,17 @@ class SomeoneCog(commands.Cog):
             role = get_package_config("someone")["allowed_role"]
             role = await message.guild.fetch_role(role)
             if role not in message.author.roles:
-                await message.channel.send(f"You are not allowed to use someone! You need the {role.mention} role to use someone!",silent=True,ephemeral=True)
+                await message.channel.send(f"You are not allowed to use someone! You need the {role.name} role to use someone!",silent=True)
                 return
             if message.author.id not in rate_limits or rate_limits.get(message.author.id,datetime.datetime.now()) < datetime.datetime.now() - datetime.timedelta(seconds=60):
-                embed = discord.Embed(title="This is a fake message",description=f"Sent by {message.author.mention}. This message was sent using @someone and didn't come from any server staffs and is mostly used to troll, please be cautious.")
-                await message.channel.send(message.content.replace('@','').replace("@someone",random.choice(message.guild.members).mention),embed=embed)
+                if "<@" in message.content:
+                    await message.reply("Nuh uh")
+                else:
+                    embed = discord.Embed(title="This is a fake message",description=f"Sent by {message.author.mention}. This message was sent using @someone and didn't come from any server staffs and is mostly used to troll, please be cautious.")
+                    await message.channel.send(message.content.replace("@someone",random.choice(message.guild.members).mention),embed=embed)
                 rate_limits[message.author.id] = datetime.datetime.now()
             else:
-                await message.channel.send(f"You can only use someone every 60 seconds!",silent=True,ephemeral=True)
+                await message.channel.send(f"You can only use someone every 60 seconds!",silent=True)
 
         
         

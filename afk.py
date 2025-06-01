@@ -10,6 +10,8 @@ def is_safe(message):
         return False
     if "http" in message:
         return False
+    if "<@" in message:
+        return False
     return True
 
 class AFKCog(commands.Cog):
@@ -23,8 +25,8 @@ class AFKCog(commands.Cog):
         if message == "":
             await ctx.response.send_message(f"You are now AFK!",delete_after=4)
         else:
-            await ctx.response.send_message(f"You are now AFK: {message} - <t:{datetime.datetime.now().timestamp()}>",delete_after=4)
-            afks[ctx.user.id] = message
+            await ctx.response.send_message(f"You are now AFK: {message}",delete_after=4)
+            afks[ctx.user.id] = f"{message} - <t:{datetime.datetime.now().timestamp()}>"
         if ctx.user.id in afks:
             afks.pop(ctx.user.id)
             await ctx.response.send_message("You are no longer AFK",delete_after=4)
@@ -47,7 +49,7 @@ class AFKCog(commands.Cog):
             await message.channel.send(f"{message.author.mention} is no longer AFK!",delete_after=4)
         for i in message.mentions:
             if i.id in afks:
-                await message.channel.send(f"{i.mention} is AFK {'for' + str(afks[i.id]) if afks[i.id].replace('','') != '' else ''} - <t:{datetime.datetime.now().timestamp()}>",delete_after=4,silent=True)
+                await message.channel.send(f"{i.mention} is AFK: {afks[i.id]}",delete_after=4,silent=True)
 
         if message.content.startswith("!afk"):
             if not is_safe(message.content[4:]):

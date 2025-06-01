@@ -11,7 +11,6 @@ import os, subprocess
 from datetime import datetime, timedelta
 
 # Install packages
-subprocess.run(["pip", "install", "google-generativeai"])
 create_package_config("ai", {"gemini_api_key": None,"ekitten_name": "TutlaMC","model": "gemini-2.0-flash","required_role":None})
 
 
@@ -20,20 +19,26 @@ class AITraining(commands.Cog):
         self.bot = bot
         self.training_data = []
         self.data_file = "database/training_data.json"
-        self.enabled = True
+        self.enabled = False
         self.load_training_data()
         
         genai.configure(api_key=get_package_config("ai")["gemini_api_key"])
         self.model = genai.GenerativeModel(get_package_config("ai")["model"])
 
+    def reload(self):
+        data = get_package_config("ai")
+        self.enabled = data["enabled"]
+        self.ekitten_name = data["ekitten_name"]
+        self.model = data["model"]
+        self.required_role = data["required_role"]
+        self.gemini_api_key = data["gemini_api_key"]
+        
     def load_training_data(self):
         if os.path.exists(self.data_file):
             with open(self.data_file, 'r') as f:
                 self.training_data = json.load(f)
             if len(self.training_data) > 500:
-                items_list = list(self.training_data.items())
-                new_items_list = items_list[:-500]
-                new_dict = dict(new_items_list)
+                self.training_data = self.training_data[:-500]
                 with open(self.data_file, 'w') as f:
                     json.dump(self.training_data, f, indent=4)
 
@@ -62,15 +67,16 @@ class AITraining(commands.Cog):
             change_settings("ai", {"model": model})
         if required_role is not None:
             change_settings("ai", {"required_role": required_role})
+        self.reload()
         await ctx.response.send_message(f"AI setup complete for all provided data, here's a rundown: \nAPI Key: {api_key}\nEkitten Name: {ekitten_name}\nModel: {model}\nRequired Role: {required_role}")
 
     @commands.Cog.listener()
     async def on_message(self, message:discord.Message):
-        """Collect messages for training"""
-        print("Eee")
-        if message.author.id == self.bot.user.id:
-            return
-
+        """Collect messages for training"""       
+        if hasattr(message.author, "top_role"):
+            top_role = message.author.top_role.name
+        else:
+            top_role = "None"
         message_data = {
                 'content': message.content,
                 'author': str(message.author.display_name),
@@ -90,6 +96,8 @@ class AITraining(commands.Cog):
             message_data['replied_to_user_name'] = "this message is not a reply"
         if self.enabled:
             if self.bot.user in message.mentions or message.author.id == 1280599853180911616:
+                if message.author.id == self.bot.user.id:
+                    return
                 if not self.training_data:
                     await message.reply("No training data available!")
                     return

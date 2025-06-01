@@ -93,4 +93,3 @@ class SayUwUCog(commands.Cog):
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(SayUwUCog(bot))
-    await bot.tree.sync()
